@@ -149,7 +149,6 @@ class WiremockTest {
                   .build(),
               HttpResponse.BodyHandlers.ofString());
 
-      System.out.println(response.body());
       assertThat(response.statusCode()).isEqualTo(202);
       assertThatJson(response.body()).node("id").isEqualTo("1");
       assertThatJson(response.body()).node("field").isEqualTo("response");
