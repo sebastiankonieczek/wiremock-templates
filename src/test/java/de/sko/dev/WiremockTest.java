@@ -97,7 +97,7 @@ class WiremockTest {
                     .withBody("""
                               {{val request.body assign='currentBody'}}
                               {{#assign 'newId'}}
-                              {\"id\":  1}
+                              {"id":  1}
                               {{/assign}}
                               {{jsonMerge currentBody newId}}
                               """)
@@ -130,7 +130,7 @@ class WiremockTest {
                     .withBody("""
                               {{val request.body assign='currentBody'}}
                               {{#assign 'newId'}}
-                              {\"id\":  1, \"field\": \"response\"}
+                              {"id":  1, "field": "response"}
                               {{/assign}}
                               {{#assign 'extended'}}
                                 {{jsonMerge currentBody newId}}
