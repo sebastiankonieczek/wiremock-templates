@@ -18,7 +18,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 @WireMockTest
-public class WiremockTest {
+class WiremockTest {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -115,6 +115,44 @@ public class WiremockTest {
 
       assertThat(response.statusCode()).isEqualTo(202);
       assertThatJson(response.body()).node("id").isEqualTo("1");
+    } catch (IOException | InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Test
+  void responseTransformerChangeFieldWithFormatTest(WireMockRuntimeInfo wireMockRuntimeInfo) {
+    stubFor(
+        post(urlPathEqualTo("/test"))
+            .willReturn(
+                aResponse()
+                    .withStatus(202)
+                    .withBody("""
+                              {{val request.body assign='currentBody'}}
+                              {{#assign 'newId'}}
+                              {\"id\":  1, \"field\": \"response\"}
+                              {{/assign}}
+                              {{#assign 'extended'}}
+                                {{jsonMerge currentBody newId}}
+                              {{/assign}}
+                              {{formatJson extended format='compact'}}
+                              """)
+                    .withTransformers("response-template")));
+
+    try (HttpClient httpClient = HttpClient.newBuilder().build()) {
+      final var requestBody = new DTO(null, "request");
+      final var response =
+          httpClient.send(
+              HttpRequest.newBuilder()
+                  .POST(HttpRequest.BodyPublishers.ofString(MAPPER.writeValueAsString(requestBody)))
+                  .uri(URI.create(wireMockRuntimeInfo.getHttpBaseUrl() + "/test"))
+                  .build(),
+              HttpResponse.BodyHandlers.ofString());
+
+      System.out.println(response.body());
+      assertThat(response.statusCode()).isEqualTo(202);
+      assertThatJson(response.body()).node("id").isEqualTo("1");
+      assertThatJson(response.body()).node("field").isEqualTo("response");
     } catch (IOException | InterruptedException e) {
       throw new RuntimeException(e);
     }
